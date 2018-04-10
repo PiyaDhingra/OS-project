@@ -13,13 +13,23 @@ void Need()
 {
 	int i,j;
     for ( i = 0 ; i < processes ; i++)
+    {
         for (j = 0 ; j < resources ; j++)
-            need[i][j] = max[i][j]-allocation[i][j];
+        {
+	  need[i][j] = max[i][j]-allocation[i][j];
+      }
+    }
 printf("need of processes\n");
 for (i = 0 ; i < processes ; i++)
-        for ( j = 0 ; j < resources ; j++)
+       
+	 {
+	 for ( j = 0 ; j < resources ; j++)
+	 {
+	 
             printf("%d ",need[i][j]);
+       }
         printf("\n");
+       }
 }
 
 bool isSafe()
@@ -30,6 +40,7 @@ bool isSafe()
     Need();
    
     printf("**********now check the safe state***********");
+    printf("\n");
 printf("values of allocation is\n");
 for( i=0;i<processes;i++)
     {
@@ -51,7 +62,7 @@ for(i=0;i<processes;i++)
 printf("available amount is\n");
 for(i=0;i<resources;i++)
 {
-printf("%d/t%d",i,available[i]);
+printf("%d\t%d\n",i,available[i]);
 }
 
 
@@ -80,7 +91,7 @@ while (count < processes)
                
                 int j;
                 for (j = 0; j < resources; j++)
-                    if (need[p][j] > work[j])
+                    if ((need[p][j] > work[j])||(need[p][j]<0))
                         break;
 
                 
@@ -105,11 +116,13 @@ while (count < processes)
         if (found == false)
         {
             printf("System is not in safe state");
+            printf("\n");
             return false;
         }
     }
     printf("System is in safe state.\nSafe"
          " sequence is: ");
+         printf("\n");
     for ( i = 0; i < processes; i++)
         printf("%d ",safeSeq[i]);
 
@@ -127,42 +140,50 @@ void update(int request[resources],int pro)
 		}
 		else
 		{
-			printf("error1");
+			printf("request is more than need");
+			printf("\n");
 		}
-	    two:  if(request[j]<=available[j])
+	    two: if(request[j]<=available[j])
 		{
 			 goto three;
 		}
 		else
 		{
-			printf("error2");
+			printf("request is more than available");
+			printf("\n");
 		}
-	    three: available[j]=available[j]-request[j];
-	       allocation[pro][j]=allocation[pro][j]+request[j];
+	    three: 
+	         available[j]=available[j]-request[j];
+	         allocation[pro][j]=allocation[pro][j]+request[j];
 	       
 	}
 }
 
-void function(int i)
+void request_for_resources(int i)
 {
-	int j;
 	pthread_mutex_lock(&lock);
+	int j;
 	int pro = i;
     int request[resources];
     printf("Enter request array for process %d\n\n",pro);
     for(j=0;j<resources;j++)
 	{
-	    printf("Enter the number of instaces required of resource %d\n",j);
+	    printf("Enter the number of instances required of resource %d\n",j);
 	    scanf("%d",&request[j]);
 	}
 	update(request,pro);
     if (isSafe() == false)
 	{
 	   printf("Request can not be granted\n");
-	}else
+	   for(j=0;j<resources;j++)
+	   {
+	   available[j]=available[j]+request[j];
+	   allocation[pro][j]=allocation[pro][j]-request[j];
+         }
+	}
+	else
 	{
-	printf("Request granted :\n");
-	//Update the allocation, Need, Maximum required matrix
+	printf("Request granted.....resources are allocated :\n");
 	}
 
 	pthread_mutex_unlock(&lock);
@@ -178,7 +199,6 @@ scanf("%d",&processes);
 printf("Enter the number of resources\n");
 scanf("%d",&resources);
 
-//printf("Enter processes name or number like 0 ,1 ,2 and soon\n");
 for(i=0;i<processes;i++)
 {
 process[i]=i;
@@ -222,7 +242,6 @@ int available1[resources];
 for(i=0;i<resources;i++)
 {
 scanf("%d",&available[i]);
-available1[i]=0;
 }
 printf("available amount is\n");
 
@@ -233,13 +252,13 @@ printf("%d \n",available[i]);
 }
 
 
-isSafe(available1,-1);
+isSafe();
  pthread_t th[processes];
 	for(i=0;i<processes;i++)
 	{
-	    pthread_create(&th[i],NULL,function,i);
+	    pthread_create(&th[i],NULL,request_for_resources,i);
 	}
-	printf("All threads created\n");
+
 	for(i=0;i<processes;i++)
 	{
 	    pthread_join(th[i],NULL);
@@ -247,3 +266,4 @@ isSafe(available1,-1);
 
     return 0;
 }
+
